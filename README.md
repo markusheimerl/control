@@ -127,3 +127,60 @@ Benefits of approximation:
 Example: TD-Gammon plays backgammon exceptionally well despite potentially making poor decisions in uncommon board configurations.
 
 This approach distinguishes reinforcement learning from other methods of solving MDPs.
+
+## Solving
+
+PPO offers a practical approach to solve complex MDPs by approximating the optimal policy $\pi^*$ and value function $v^*$. At its core, PPO iteratively improves a parameterized policy $\pi_\theta(a|s)$ and value function $V_\phi(s)$, typically represented by neural networks. The algorithm's key innovation lies in its objective function:
+
+$$L(\theta) = \mathbb{E}\left[\min(r_t(\theta)A_t, \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon)A_t)\right]$$
+
+where $r_t(\theta) = \frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_\text{old}}(a_t|s_t)}$ and $A_t$ estimates the advantage function. This objective allows for significant policy improvements while preventing excessive changes, striking a balance between exploration and exploitation.
+
+PPO indirectly approximates the Bellman optimality equation:
+
+$$v^*(s) = \max_a \mathbb{E}[R_{t+1} + \gamma v^*(S_{t+1}) | S_t=s, A_t=a]$$
+
+by sampling trajectories from the environment and using these experiences to update both the policy and value function. This approach circumvents the need for complete knowledge of the environment's dynamics, making it suitable for high-dimensional, continuous state and action spaces where traditional dynamic programming methods fail.
+
+Through repeated iterations of sampling, advantage estimation, and network updates, PPO gradually converges to a strong approximation of the optimal policy, effectively solving the MDP in a sample-efficient and stable manner.
+
+``` python
+def PPO(env, num_episodes, num_epochs, batch_size):
+    # Initialize policy network π_θ and value network V_φ
+    policy_network = initialize_policy_network()
+    value_network = initialize_value_network()
+    
+    for episode in range(num_episodes):
+        # Collect trajectory data
+        states, actions, rewards, log_probs_old = collect_trajectory(env, policy_network)
+        
+        # Compute advantages and returns
+        advantages = compute_advantages(rewards, value_network)
+        returns = compute_returns(rewards)
+        
+        for epoch in range(num_epochs):
+            # Sample mini-batches
+            for batch in create_minibatches(states, actions, log_probs_old, advantages, returns, batch_size):
+                # Compute policy loss
+                ratio = exp(log_probs_new - log_probs_old)
+                clip_factor = clip(ratio, 1-epsilon, 1+epsilon)
+                policy_loss = -min(ratio * advantages, clip_factor * advantages).mean()
+                
+                # Compute value loss
+                value_loss = mse(value_network(states), returns)
+                
+                # Compute total loss
+                total_loss = policy_loss + c1 * value_loss - c2 * entropy(policy_network)
+                
+                # Update networks
+                optimize(total_loss)
+        
+        # Update old policy
+        update_old_policy(policy_network)
+
+# Main training loop
+env = create_environment()
+ppo = PPO(env, num_episodes=1000, num_epochs=10, batch_size=64)
+ppo.train()
+
+```
