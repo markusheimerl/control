@@ -81,23 +81,3 @@ def print_state(state):
     print("  Position:", state['linear_position_W'])
     print("  Rotation Matrix:")
     print(state['R_W_B'])
-
-# Run examples
-np.set_printoptions(precision=4, suppress=True)
-
-for i in range(3):  # Run 3 examples
-    print(f"\nExample {i+1}:")
-    state = create_state()
-    print("Initial State:")
-    print_state(state)
-    
-    for j in range(5):  # Run for 5 steps
-        action = create_random_action()
-        print(f"\nStep {j+1}")
-        print("Action:", action)
-        
-        new_state, _ = step(state, action)
-        print("Resulting State:")
-        print_state(new_state)
-        
-        state = new_state
