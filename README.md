@@ -123,6 +123,38 @@ PPO leverages sampled trajectories from the environment to update the policy and
 The PPO algorithm iteratively collects trajectories, computes advantages and returns, and updates the policy and value networks to converge towards an optimal policy:
 
 ```python
+def collect_trajectory(env, policy_network, max_timesteps=1000):
+    states = []
+    actions = []
+    rewards = []
+    log_probs = []
+    
+    state = env.reset()  # Start a new episode
+    for t in range(max_timesteps):
+        # Get action probabilities from policy network
+        action_probs = policy_network(state)
+        
+        # Sample an action
+        action = sample_action(action_probs)
+        
+        # Take the action in the environment
+        next_state, reward, done, _ = env.step(action)
+        
+        # Store the experience
+        states.append(state)
+        actions.append(action)
+        rewards.append(reward)
+        log_probs.append(log(action_probs[action]))  # Log probability of the chosen action
+        
+        # Move to the next state
+        state = next_state
+        
+        # If the episode is done (e.g., quadcopter crashed), we can end early
+        if done:
+            break
+    
+    return states, actions, rewards, log_probs
+
 def PPO(env, num_episodes, num_epochs, batch_size):
     # Initialize policy network π_θ and value network V_φ
     policy_network = initialize_policy_network()
