@@ -84,6 +84,14 @@ $$
 
 These equations describe the self-consistency condition that must be satisfied for the value functions under an optimal policy.
 
+#### The Advantage Function
+
+The advantage function $A_t$ quantifies the relative value of taking a specific action $a$ in state $s$ over the average action, defined as:
+$$
+A_t = q_\pi(s, a) - v_\pi(s)
+$$
+where $q_\pi(s, a)$ is the expected return for taking action $a$ in state $s$ and $v_\pi(s)$ is the average expected return from state $s$.
+
 #### Solving the MDP with Proximal Policy Optimization (PPO)
 
 Proximal Policy Optimization (PPO) is a practical reinforcement learning algorithm that approximates the solution to the Bellman optimality equations. PPO operates by iteratively improving a parameterized policy $\pi_\theta(a|s)$ and value function $V_\phi(s)$, both of which are typically represented using neural networks.
