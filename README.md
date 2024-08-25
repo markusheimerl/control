@@ -1,150 +1,120 @@
-# Machine Learning Approach to Quadcopter Control
+### Machine Learning Approach to Quadcopter Control
 
-## Modeling the Control Problem as a Markov Decision Process
+Quadcopter control using machine learning can be framed as a Markov Decision Process (MDP), where the goal is to learn an optimal policy that maximizes long-term rewards. This approach leverages reinforcement learning (RL) to approximate solutions to the Bellman optimality equations, providing a robust mechanism for decision-making in dynamic and complex environments. 
 
-In a finite Markov Decision Process (MDP), we have finite sets of states $\mathcal{S}$, actions $\mathcal{A}$, and rewards $\mathcal{R}$. The key idea is that the next state and reward depend only on the current state and action:
+#### Modeling the Control Problem as a Markov Decision Process
 
-$$p(s',r|s,a) = \text{Pr}\{S_t=s', R_t=r | S_{t-1}=s, A_{t-1}=a\}$$
+In reinforcement learning, the control problem is modeled as a finite Markov Decision Process (MDP) defined by:
+- A set of states $\mathcal{S}$.
+- A set of actions $\mathcal{A}$.
+- A reward function $\mathcal{R}$.
+- State transition probabilities $p(s',r|s,a)$, which give the probability of moving to state $s'$ and receiving reward $r$, given the current state $s$ and action $a$:
 
-This function $p$ defines the dynamics of the MDP.
+$$
+p(s',r|s,a) = \text{Pr}\{S_t=s', R_t=r | S_{t-1}=s, A_{t-1}=a\}
+$$
 
-## Returns and Episodes
+The MDP's dynamics are entirely captured by this probability function $p$.
 
-We aim to maximize the expected return, defined as a function of the reward sequence. The simplest return is the sum of rewards:
+#### Returns and Episodes
 
-$$ G_t = R_{t+1} + R_{t+2} + R_{t+3} + \cdots + R_T $$
+The objective in RL is to maximize the expected return, which is a function of the sequence of rewards. The simplest form of return is the sum of rewards over time:
 
-More generally, we use a discounted return:
+$$
+G_t = R_{t+1} + R_{t+2} + R_{t+3} + \cdots + R_T
+$$
 
-$$ G_t = \sum_{k=0}^{\infty} \gamma^k R_{t+k+1} $$
+However, a more common approach is to use a discounted return, which applies a discount factor $\gamma \in [0,1]$ to future rewards, making them progressively less valuable:
 
-Here, $\gamma \in [0,1]$ is the discount factor, making future rewards less valuable.
+$$
+G_t = \sum_{k=0}^{\infty} \gamma^k R_{t+k+1}
+$$
 
-## Policies and Value Functions
+#### Policies and Value Functions
 
-A policy $\pi$ maps states to probabilities of selecting each action. The value function $v_\pi(s)$ for a policy $\pi$ is the expected return when starting in state $s$ and following $\pi$:
+A policy $\pi$ represents the agent's strategy, mapping states to a probability distribution over actions. The value function $v_\pi(s)$ quantifies the expected return when starting from state $s$ and following policy $\pi$:
 
-$$ v_\pi(s) = \mathbb{E}_\pi[G_t | S_t = s] = \mathbb{E}_\pi \left[\sum_{k=0}^{\infty} \gamma^k R_{t+k+1} \middle| S_t = s\right] $$
+$$
+v_\pi(s) = \mathbb{E}_\pi[G_t | S_t = s] = \mathbb{E}_\pi \left[\sum_{k=0}^{\infty} \gamma^k R_{t+k+1} \middle| S_t = s\right]
+$$
 
-Similarly, the action-value function $q_\pi(s,a)$ is the expected return starting from state $s$, taking action $a$, then following policy $\pi$:
+Similarly, the action-value function $q_\pi(s,a)$ represents the expected return from state $s$, taking action $a$, and then following policy $\pi$:
 
-$$ q_\pi(s,a) = \mathbb{E}_\pi[G_t | S_t = s, A_t = a] $$
+$$
+q_\pi(s,a) = \mathbb{E}_\pi[G_t | S_t = s, A_t = a]
+$$
 
-## The Bellman Equation
+#### The Bellman Equation
 
-The Bellman equation relates the value of a state to the values of its successor states:
+The Bellman equation provides a recursive decomposition of the value function, expressing the value of a state as the expected immediate reward plus the discounted value of successor states:
 
-$$ v_\pi(s) = \sum_a \pi(a|s) \sum_{s',r} p(s', r | s, a) [r + \gamma v_\pi(s')] $$
+$$
+v_\pi(s) = \sum_a \pi(a|s) \sum_{s',r} p(s', r | s, a) [r + \gamma v_\pi(s')]
+$$
 
-This equation expresses that the value of a state is the expected immediate reward plus the discounted value of the next state, averaged over all possible actions and outcomes.
+This equation is fundamental in determining the value function for any given policy.
 
-## Optimal Policies and Optimal Value Functions
+#### Optimal Policies and Value Functions
 
-Solving a reinforcement learning task means, roughly, finding a policy that achieves a lot of reward over the long run. For finite MDPs, we can precisely define an optimal policy in the following way. Value functions define a partial ordering over policies. A policy $\pi$ is defined to be better than or equal to a policy $\pi'$ if its expected return is greater than or equal to that of $\pi'$ for all states. In other words, $\pi \geq \pi'$ if and only if $v_\pi(s) \geq v_{\pi'}(s)$ for all $s \in S$. There is always at least one policy that is better than or equal to all other policies. This is an optimal policy. Although there may be more than one, we denote all the optimal policies by $\pi_*$. They share the same state-value function, called the optimal state-value function, denoted $v_*$, and defined as
+The goal of solving an RL task is to find an optimal policy $\pi_*$ that maximizes the expected return across all states. The optimal state-value function $v_*$ and action-value function $q_*$ are defined as:
 
-$v_*(s) \doteq \max_\pi v_\pi(s)$
+$$
+v_*(s) = \max_\pi v_\pi(s)
+$$
 
-for all $s \in S$.
+$$
+q_*(s,a) = \max_\pi q_\pi(s,a)
+$$
 
-Optimal policies also share the same optimal action-value function, denoted $q_*$, and defined as
+The optimal action-value function $q_*$ can be further expressed in terms of the optimal state-value function $v_*$:
 
-$q_*(s,a) \doteq \max_\pi q_\pi(s,a)$
+$$
+q_*(s,a) = \mathbb{E}[R_{t+1} + \gamma v_*(S_{t+1}) | S_t=s, A_t=a]
+$$
 
-for all $s \in S$ and $a \in A(s)$. For the state-action pair $(s,a)$, this function gives the expected return for taking action $a$ in state $s$ and thereafter following an optimal policy. Thus, we can write $q_*$ in terms of $v_*$ as follows:
+The Bellman optimality equations for $v_*$ and $q_*$ provide the foundation for finding these optimal functions:
 
-$q_*(s,a) = \mathbb{E}[R_{t+1} + \gamma v_*(S_{t+1}) | S_t=s, A_t=a]$
+$$
+v_*(s) = \max_{a} \sum_{s',r} p(s', r|s,a)[r + \gamma v_*(s')]
+$$
 
-Because $v_*$ is the value function for a policy, it must satisfy the self-consistency condition given by the Bellman equation for state values. Because it is the optimal value function, however, $v_*$'s consistency condition can be written in a special form without reference to any specific policy. This is the Bellman equation for $v_*$, or the Bellman optimality equation. Intuitively, the Bellman optimality equation expresses the fact that the value of a state under an optimal policy must equal the expected return for the best action from that state:
+$$
+q_*(s,a) = \sum_{s',r} p(s', r|s,a)[r + \gamma \max_{a'} q_*(s', a')]
+$$
 
-$v_*(s) = \max_{a\in A(s)} q_{\pi_*}(s,a)$
+These equations describe the self-consistency condition that must be satisfied for the value functions under an optimal policy.
 
-$= \max_a \mathbb{E}_{\pi_*}[G_t | S_t=s, A_t=a]$
+#### Solving the MDP with Proximal Policy Optimization (PPO)
 
-$= \max_a \mathbb{E}_{\pi_*}[R_{t+1} + \gamma G_{t+1} | S_t=s, A_t=a]$ (by (3.9))
+Proximal Policy Optimization (PPO) is a practical reinforcement learning algorithm that approximates the solution to the Bellman optimality equations. PPO operates by iteratively improving a parameterized policy $\pi_\theta(a|s)$ and value function $V_\phi(s)$, both of which are typically represented using neural networks.
 
-$= \max_a \mathbb{E}[R_{t+1} + \gamma v_*(S_{t+1}) | S_t=s, A_t=a]$
+The core idea of PPO is to maximize a clipped surrogate objective function:
 
-$= \max_a \sum_{s',r} p(s', r|s,a)[r + \gamma v_*(s')]$.
+$$
+L(\theta) = \mathbb{E}\left[\min(r_t(\theta)A_t, \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon)A_t)\right]
+$$
 
-The last two equations are two forms of the Bellman optimality equation for $v_*$. The Bellman optimality equation for $q_*$ is
+where
 
-$q_*(s,a) = \mathbb{E}[R_{t+1} + \gamma \max_{a'} q_*(S_{t+1}, a') | S_t = s, A_t = a]$
+$$
+r_t(\theta) = \frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_\text{old}}(a_t|s_t)}
+$$
 
-$= \sum_{s',r} p(s', r|s,a)[r + \gamma \max_{a'} q_*(s', a')]$.
-
-For finite MDPs, the Bellman optimality equation for $v_*$ has a unique solution. It's a system of equations, one for each state. With known environment dynamics, this system can be solved for $v_*$ using nonlinear equation solving methods.
-
-Once $v_*$ is known, determining an optimal policy is straightforward:
-- For each state, choose actions that maximize the right-hand side of the Bellman optimality equation.
-- Any policy assigning nonzero probability only to these actions is optimal.
-- A policy that is greedy with respect to $v_*$ is optimal.
-
-The term "greedy" in this context refers to selecting alternatives based solely on immediate considerations. With $v_*$, a greedy policy becomes optimal in the long-term sense, as $v_*$ already accounts for future rewards.
-
-Using $q_*$ makes optimal action selection even simpler:
-- The agent can directly choose the action that maximizes $q_*(s,a)$ for any state.
-- This eliminates the need for a one-step-ahead search.
-- $q_*$ provides the optimal expected long-term return for each state-action pair.
-
-By representing a function of state-action pairs, $q_*$ allows optimal action selection without knowledge of successor states, their values, or environment dynamics.
-
-Explicitly solving the Bellman optimality equation to find an optimal policy is rarely practical:
-
-1. It requires accurate knowledge of environment dynamics.
-2. It demands extensive computational resources.
-3. It assumes the Markov property holds.
-
-These conditions are seldom met in practice. For example, backgammon has about 10^20 states, making direct solution computationally infeasible.
-
-Alternative approaches:
-
-1. Heuristic search methods: Expand the Bellman equation to a certain depth, using heuristic evaluation at leaf nodes.
-2. Dynamic programming: Closely related to the Bellman equation.
-3. Reinforcement learning methods: Approximately solve the Bellman equation using actual experienced transitions instead of expected ones.
-
-These methods are explored in subsequent chapters as ways to approximately solve the Bellman optimality equation.
-
-
-## Optimality and Approximation
-
-Key points:
-1. Optimal policies are rarely achievable in practice due to computational constraints.
-2. The concept of optimality organizes the approach to learning and helps understand theoretical properties of algorithms.
-3. Agents can only approximate optimal policies to varying degrees.
-
-Challenges:
-- Computational power: Even for well-defined environments, computing optimal policies is often infeasible.
-- Memory constraints: Large memory is needed for approximating value functions, policies, and models.
-
-Approximation methods:
-- Tabular methods: Suitable for small, finite state sets.
-- Function approximation: Necessary for large state spaces where tabular methods are impractical.
-
-Benefits of approximation:
-- Allows focus on frequently encountered states.
-- Can achieve good performance even with suboptimal decisions in rare situations.
-
-Example: TD-Gammon plays backgammon exceptionally well despite potentially making poor decisions in uncommon board configurations.
-
-This approach distinguishes reinforcement learning from other methods of solving MDPs.
-
-## Solving
-
-PPO offers a practical approach to solve complex MDPs by approximating the optimal policy $\pi^*$ and value function $v^*$. At its core, PPO iteratively improves a parameterized policy $\pi_\theta(a|s)$ and value function $V_\phi(s)$, typically represented by neural networks. The algorithm's key innovation lies in its objective function:
-
-$$L(\theta) = \mathbb{E}\left[\min(r_t(\theta)A_t, \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon)A_t)\right]$$
-
-where $r_t(\theta) = \frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_\text{old}}(a_t|s_t)}$ and $A_t$ estimates the advantage function. This objective allows for significant policy improvements while preventing excessive changes, striking a balance between exploration and exploitation.
+and $A_t$ is an estimate of the advantage function. This objective allows for substantial policy updates while constraining them to avoid instability.
 
 PPO indirectly approximates the Bellman optimality equation:
 
-$$v^*(s) = \max_a \mathbb{E}[R_{t+1} + \gamma v^*(S_{t+1}) | S_t=s, A_t=a]$$
+$$
+v^*(s) = \max_a \mathbb{E}[R_{t+1} + \gamma v^*(S_{t+1}) | S_t=s, A_t=a]
+$$
 
-by sampling trajectories from the environment and using these experiences to update both the policy and value function. This approach circumvents the need for complete knowledge of the environment's dynamics, making it suitable for high-dimensional, continuous state and action spaces where traditional dynamic programming methods fail.
+PPO leverages sampled trajectories from the environment to update the policy and value function, circumventing the need for exact knowledge of environment dynamics. This makes PPO particularly suitable for high-dimensional and continuous state and action spaces where traditional methods fail.
 
-Through repeated iterations of sampling, advantage estimation, and network updates, PPO gradually converges to a strong approximation of the optimal policy, effectively solving the MDP in a sample-efficient and stable manner.
+#### Algorithm Implementation
 
-``` python
+The PPO algorithm iteratively collects trajectories, computes advantages and returns, and updates the policy and value networks to converge towards an optimal policy:
+
+```python
 def PPO(env, num_episodes, num_epochs, batch_size):
     # Initialize policy network π_θ and value network V_φ
     policy_network = initialize_policy_network()
@@ -182,5 +152,8 @@ def PPO(env, num_episodes, num_epochs, batch_size):
 env = create_environment()
 ppo = PPO(env, num_episodes=1000, num_epochs=10, batch_size=64)
 ppo.train()
-
 ```
+
+### Conclusion
+
+The approach to quadcopter control using reinforcement learning and the MDP framework, specifically leveraging PPO, allows for effective handling of complex, high-dimensional environments. By focusing on approximating the Bellman optimality equations, the PPO algorithm provides a robust, sample-efficient method to derive near-optimal control policies without requiring explicit knowledge of the environment's dynamics. This methodology is at the heart of modern reinforcement learning applications, from robotic control to game playing, demonstrating its versatility and effectiveness in solving complex decision-making problems.
