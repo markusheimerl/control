@@ -194,6 +194,10 @@ ppo = PPO(env, num_episodes=1000, num_epochs=10, batch_size=64)
 ppo.train()
 ```
 
+
+## Todo:
+
+move to quaternions
 ### Conclusion
 
 The approach to quadcopter control using reinforcement learning and the MDP framework, specifically leveraging PPO, allows for effective handling of complex, high-dimensional environments. By focusing on approximating the Bellman optimality equations, the PPO algorithm provides a robust, sample-efficient method to derive near-optimal control policies without requiring explicit knowledge of the environment's dynamics. This methodology is at the heart of modern reinforcement learning applications, from robotic control to game playing, demonstrating its versatility and effectiveness in solving complex decision-making problems.
