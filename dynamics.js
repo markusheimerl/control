@@ -1,3 +1,5 @@
+// Run with "node dynamics.js"
+
 function crossVec3f(v1, v2) {
     return [
         v1[1] * v2[2] - v1[2] * v2[1],
@@ -154,8 +156,11 @@ let linear_position_W = [0, 1, 0];
 
 let R_W_B = multMat3f(multMat3f(xRotMat3f(0), yRotMat3f(0)), zRotMat3f(0));
 
-setInterval(function () {
-	// --- LIMIT MOTOR SPEEDS ---
+let iteration = 0;
+const maxIterations = 1000;  // Run for 1000 iterations
+
+function runSimulation() {
+    // --- LIMIT MOTOR SPEEDS ---
 	omega_1 = Math.max(Math.min(omega_1, omega_max), omega_min);
 	omega_2 = Math.max(Math.min(omega_2, omega_max), omega_min);
 	omega_3 = Math.max(Math.min(omega_3, omega_max), omega_min);
@@ -200,4 +205,17 @@ setInterval(function () {
 	angular_velocity_B = addVec3f(angular_velocity_B, multScalVec3f(dt, angular_acceleration_B));
 	R_W_B = addMat3f(R_W_B, multScalMat3f(dt, multMat3f(R_W_B, so3hat(angular_velocity_B))));
 
-}, dt);
+    console.log(`Iteration ${iteration}:`);
+    console.log(`Position: ${linear_position_W}`);
+    console.log(`Velocity: ${linear_velocity_W}`);
+    console.log(`Angular Velocity: ${angular_velocity_B}`);
+    console.log('---');
+
+    iteration++;
+    if (iteration >= maxIterations) {
+        clearInterval(intervalId);
+        console.log("Simulation complete.");
+    }
+}
+
+const intervalId = setInterval(runSimulation, dt * 1000);
