@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <math.h>
 
+// gcc dynamics.c -lm -march=alderlake -mtune=alderlake -O3 -ffast-math -flto -floop-nest-optimize
+
 // Function prototypes
 void crossVec3f(float v1[3], float v2[3], float result[3]);
 void multScalVec3f(float s, float v[3], float result[3]);
