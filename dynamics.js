@@ -150,7 +150,7 @@ let omega_4 = omega_stable;
 
 let angular_velocity_B = [0, 0, 0];
 let linear_velocity_W = [0, 0, 0];
-let linear_position_W = [drone_drawable["modelmatrix"][12], drone_drawable["modelmatrix"][13], drone_drawable["modelmatrix"][14]];
+let linear_position_W = [0, 1, 0];
 
 let R_W_B = multMat3f(multMat3f(xRotMat3f(0), yRotMat3f(0)), zRotMat3f(0));
 
