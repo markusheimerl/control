@@ -222,4 +222,4 @@ def run_simulation():
 
 # Run the simulation
 while run_simulation():
-    time.sleep(dt)
+    pass
