@@ -117,6 +117,35 @@ def multScalMat3f(s, m):
         s * m[6], s * m[7], s * m[8]
     ]
 
+
+def orthonormalize(R):
+    # Gram-Schmidt Orthogonalization
+    x = [R[0], R[3], R[6]]
+    y = [R[1], R[4], R[7]]
+    z = [R[2], R[5], R[8]]
+
+    # Normalize x
+    x_norm = math.sqrt(sum(i*i for i in x))
+    x = [i/x_norm for i in x]
+
+    # Make y orthogonal to x
+    dot_xy = sum(x[i]*y[i] for i in range(3))
+    y = [y[i] - dot_xy*x[i] for i in range(3)]
+
+    # Normalize y
+    y_norm = math.sqrt(sum(i*i for i in y))
+    y = [i/y_norm for i in y]
+
+    # z is the cross product of x and y
+    z = crossVec3f(x, y)
+
+    # Construct the orthonormalized matrix
+    return [
+        x[0], y[0], z[0],
+        x[1], y[1], z[1],
+        x[2], y[2], z[2]
+    ]
+
 # Constants
 k_f = 0.0004905
 k_m = 0.00004905
@@ -246,6 +275,7 @@ def run_simulation():
         linear_position_W = addVec3f(linear_position_W, multScalVec3f(dt, linear_velocity_W))
         angular_velocity_B = addVec3f(angular_velocity_B, multScalVec3f(dt, angular_acceleration_B))
         R_W_B = addMat3f(R_W_B, multScalMat3f(dt, multMat3f(R_W_B, so3hat(angular_velocity_B))))
+        R_W_B = orthonormalize(R_W_B)
 
         # Calculate reward
         reward = calculate_reward(angular_velocity_B, linear_velocity_W)
