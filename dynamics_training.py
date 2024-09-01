@@ -229,6 +229,7 @@ def run_simulation():
     R_W_B = multMat3f(multMat3f(xRotMat3f(0), yRotMat3f(0)), zRotMat3f(0))
 
     cumulative_reward = 0
+    triplets = []
 
     for iteration in range(max_iterations):
         # Calculate linear acceleration in body frame (excluding gravity)
@@ -239,7 +240,8 @@ def run_simulation():
         imu_gyro_reading = [add_noise(ang_vel, gyro_noise_std) for ang_vel in angular_velocity_B]
 
         # Get rotor speeds from the model
-        omega_1, omega_2, omega_3, omega_4 = get_rotor_speeds(imu_accel_reading, imu_gyro_reading)
+        rotor_speeds = get_rotor_speeds(imu_accel_reading, imu_gyro_reading)
+        omega_1, omega_2, omega_3, omega_4 = rotor_speeds
 
         # Forces and moments
         F1 = k_f * omega_1 * abs(omega_1)
@@ -281,6 +283,10 @@ def run_simulation():
         reward = calculate_reward(angular_velocity_B, linear_velocity_W)
         cumulative_reward += reward
 
+        # Record state + action + reward triplet
+        triplet = imu_accel_reading + imu_gyro_reading + rotor_speeds + [reward]
+        triplets.append(triplet)
+
         # Print state (you might want to comment this out or modify for large number of simulations)
         print(f"Iteration {iteration}:")
         print(f"Position: {linear_position_W}")
@@ -293,14 +299,17 @@ def run_simulation():
         print(f"Cumulative Reward: {cumulative_reward}")
         print('---')
 
-    return cumulative_reward
+    return cumulative_reward, triplets
 
 # Run multiple simulations
 simulation_rewards = []
+all_triplets = []
+
 for sim in range(num_simulations):
     print(f"Starting simulation {sim + 1}")
-    cumulative_reward = run_simulation()
+    cumulative_reward, triplets = run_simulation()
     simulation_rewards.append(cumulative_reward)
+    all_triplets.extend(triplets)
     print(f"Simulation {sim + 1} complete")
     print(f"Final Cumulative Reward: {cumulative_reward}")
     print("============================")
