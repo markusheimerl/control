@@ -277,7 +277,7 @@ def write_triplets_to_csv(all_simulation_results, filename):
     with open(filename, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
         # Write header
-        writer.writerow(['simulation', 'ax', 'ay', 'az', 'gx', 'gy', 'gz', 'omega1', 'omega2', 'omega3', 'omega4', 'reward'])
+        writer.writerow(['ax', 'ay', 'az', 'gx', 'gy', 'gz', 'omega1', 'omega2', 'omega3', 'omega4', 'reward'])
         # Write data
         for sim_num, (_, triplets) in enumerate(all_simulation_results, 1):
             for state, action, reward in triplets:
