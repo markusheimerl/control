@@ -7,6 +7,10 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from tqdm import tqdm
 
+# Check if CUDA is available
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"Using device: {device}")
+
 # Load and preprocess the data
 df = pd.read_csv('all_simulations_triplets.csv')
 X = df[['ax', 'ay', 'az', 'gx', 'gy', 'gz', 'omega1', 'omega2', 'omega3', 'omega4']].values
@@ -20,11 +24,11 @@ scaler = StandardScaler()
 X_train_scaled = scaler.fit_transform(X_train)
 X_test_scaled = scaler.transform(X_test)
 
-# Convert to PyTorch tensors
-X_train_tensor = torch.FloatTensor(X_train_scaled)
-y_train_tensor = torch.FloatTensor(y_train).unsqueeze(1)
-X_test_tensor = torch.FloatTensor(X_test_scaled)
-y_test_tensor = torch.FloatTensor(y_test).unsqueeze(1)
+# Convert to PyTorch tensors and move to device
+X_train_tensor = torch.FloatTensor(X_train_scaled).to(device)
+y_train_tensor = torch.FloatTensor(y_train).unsqueeze(1).to(device)
+X_test_tensor = torch.FloatTensor(X_test_scaled).to(device)
+y_test_tensor = torch.FloatTensor(y_test).unsqueeze(1).to(device)
 
 # Create a custom dataset
 class CustomDataset(Dataset):
@@ -60,7 +64,7 @@ class Net(nn.Module):
         return x
 
 # Initialize the model, loss function, and optimizer
-model = Net()
+model = Net().to(device)
 criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
@@ -69,6 +73,7 @@ num_epochs = 100
 for epoch in range(num_epochs):
     model.train()
     for batch_X, batch_y in tqdm(train_loader):
+        batch_X, batch_y = batch_X.to(device), batch_y.to(device)
         optimizer.zero_grad()
         outputs = model(batch_X)
         loss = criterion(outputs, batch_y)
@@ -80,10 +85,10 @@ for epoch in range(num_epochs):
     with torch.no_grad():
         test_loss = 0
         for batch_X, batch_y in test_loader:
+            batch_X, batch_y = batch_X.to(device), batch_y.to(device)
             outputs = model(batch_X)
             test_loss += criterion(outputs, batch_y).item()
         test_loss /= len(test_loader)
-    
     
     print(f'Epoch [{epoch+1}/{num_epochs}], Test Loss: {test_loss:.4f}')
 
