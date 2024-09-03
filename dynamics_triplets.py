@@ -255,26 +255,48 @@ def run_simulation():
         state_action_reward_triplets.append((state, action, reward))
 
         # Print state (you might want to comment this out or modify for large number of simulations)
-        print(f"Simulation {sim + 1}, Iteration {iteration}:")
-        print(f"Position: {linear_position_W}")
-        print(f"Velocity: {linear_velocity_W}")
-        print(f"Angular Velocity: {angular_velocity_B}")
-        print(f"IMU Accelerometer Reading: {imu_accel_reading}")
-        print(f"IMU Gyroscope Reading: {imu_gyro_reading}")
-        print(f"Action (rotor speeds): {action}")
-        print(f"Reward: {reward}")
-        print(f"Cumulative Reward: {cumulative_reward}")
-        print('---')
+        #print(f"Simulation {sim + 1}, Iteration {iteration}:")
+        #print(f"Position: {linear_position_W}")
+        #print(f"Velocity: {linear_velocity_W}")
+        #print(f"Angular Velocity: {angular_velocity_B}")
+        #print(f"IMU Accelerometer Reading: {imu_accel_reading}")
+        #print(f"IMU Gyroscope Reading: {imu_gyro_reading}")
+        #print(f"Action (rotor speeds): {action}")
+        #print(f"Reward: {reward}")
+        #print(f"Cumulative Reward: {cumulative_reward}")
+        #print('---')
 
     return cumulative_reward, state_action_reward_triplets
 
 # Run multiple simulations
 simulation_results = []
+import csv
+
+# Modify this function to write all triplets to a single CSV
+def write_triplets_to_csv(all_simulation_results, filename):
+    with open(filename, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        # Write header
+        writer.writerow(['simulation', 'ax', 'ay', 'az', 'gx', 'gy', 'gz', 'omega1', 'omega2', 'omega3', 'omega4', 'reward'])
+        # Write data
+        for sim_num, (_, triplets) in enumerate(all_simulation_results, 1):
+            for state, action, reward in triplets:
+                row = [sim_num] + state + action + [reward]
+                writer.writerow(row)
+
+# Modify the main simulation loop
+simulation_results = []
 for sim in range(num_simulations):
     print(f"Starting simulation {sim + 1}")
     cumulative_reward, triplets = run_simulation()
     simulation_results.append((cumulative_reward, triplets))
+    
     print(f"Simulation {sim + 1} complete")
     print(f"Final Cumulative Reward: {cumulative_reward}")
     print(f"Number of state-action-reward triplets: {len(triplets)}")
     print("============================")
+
+# Write all triplets to a single CSV after all simulations are complete
+filename = "all_simulations_triplets.csv"
+write_triplets_to_csv(simulation_results, filename)
+print(f"All simulation triplets saved to {filename}")
