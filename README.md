@@ -2,6 +2,9 @@
 
 Quadcopter control using machine learning can be framed as a Markov Decision Process (MDP), where the goal is to learn an optimal policy that maximizes long-term rewards. This approach leverages reinforcement learning (RL) to approximate solutions to the Bellman optimality equations, providing a robust mechanism for decision-making in dynamic and complex environments. 
 
+This has turned out harder than I thought. The problem is that since all of this is just numbers its
+a little hard to remain grounded. Like what am I looking for? When is it right? Only hunches at this point...
+
 #### Modeling the Control Problem as a Markov Decision Process
 
 In reinforcement learning, the control problem is modeled as a finite Markov Decision Process (MDP) defined by:
